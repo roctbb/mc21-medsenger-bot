@@ -1,6 +1,8 @@
 import json
 import threading
 from datetime import datetime
+
+import werkzeug
 from flask import request, abort, jsonify, render_template
 from config import *
 import sys, os
@@ -76,6 +78,8 @@ def safe(func):
     def wrapper(*args, **kargs):
         try:
             return func(*args, **kargs)
+        except werkzeug.exceptions.HTTPException as e:
+            raise e
         except Exception as e:
             log(e, True)
             abort(500)

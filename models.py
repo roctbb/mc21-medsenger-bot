@@ -20,7 +20,15 @@ class Alert(db.Model):
     workstation_id = db.Column(db.Integer, db.ForeignKey('workstation.id', ondelete="CASCADE"), nullable=True)
 
     def as_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        return {
+            "id": self.id,
+            "contract_id": self.contract_id,
+            "name": self.name,
+            "birthday": self.birthday,
+            "phone": self.phone,
+            "created_on": self.created_on,
+            "message": self.message
+        }
 
 class Workstation(db.Model):
     id = db.Column(db.Integer, primary_key=True)

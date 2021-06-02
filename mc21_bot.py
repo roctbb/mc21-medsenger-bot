@@ -90,6 +90,27 @@ def get_alert():
         "alert": alert.as_dict()
     })
 
+@app.route('/api/reset', methods=['POST'])
+@safe
+def reset_alert():
+    key = request.args.get('key')
+    workstation = Workstation.query.filter_by(access_key=key).first()
+    if not workstation:
+        abort(403)
+
+    data = request.json
+
+    alert = Alert.query.filter_by(id=data.get('id')).first()
+    if not alert:
+        abort(404)
+
+    alert.sent_on = None
+    db.session.commit()
+
+    return jsonify({
+        "state": "done"
+    })
+
 @app.route('/api/alert', methods=['POST'])
 @safe
 def process_alert():

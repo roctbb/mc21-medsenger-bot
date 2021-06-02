@@ -72,6 +72,17 @@ def verify_json(func):
     wrapper.__name__ = func.__name__
     return wrapper
 
+def safe(func):
+    def wrapper(*args, **kargs):
+        try:
+            return func(*args, **kargs)
+        except Exception as e:
+            log(e, True)
+            abort(500)
+
+    wrapper.__name__ = func.__name__
+    return wrapper
+
 def delayed(delay, f, args):
     timer = threading.Timer(delay, f, args=args)
     timer.start()

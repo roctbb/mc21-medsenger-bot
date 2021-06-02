@@ -42,7 +42,6 @@ def order(data):
         abort(422)
 
 
-# contract management api
 
 @app.route('/init', methods=['POST'])
 @verify_json
@@ -59,11 +58,71 @@ def remove(data):
 
 
 # settings and views
-
 @app.route('/settings', methods=['GET'])
 @verify_args
 def get_settings(args, form):
     return "Этот интеллектуальный агент не требует настройки"
+
+
+@app.route('/api/alert', methods=['GET'])
+@safe
+def get_alert():
+    key = request.args.get('key')
+
+    workstation = Workstation.query.filter_by(access_key=key).first()
+
+    if not workstation:
+        abort(403)
+
+    alerts = Alert.query.filter_by(sent_on=None).all()
+    if not alerts:
+        return jsonify({"state": "no alerts"})
+
+    alert = alerts[0]
+    alert.workstation_id = workstation.id
+    alert.sent_on = datetime.now()
+
+    db.session.commit()
+
+    return jsonify({
+        "state": "alert",
+        "count": len(alerts),
+        "alert": alert.as_dict()
+    })
+
+@app.route('/api/alert', methods=['POST'])
+@safe
+def process_alert():
+    key = request.args.get('key')
+    workstation = Workstation.query.filter_by(access_key=key).first()
+    if not workstation:
+        abort(403)
+
+    data = request.json
+
+    alert = Alert.query.filter_by(id=data.get('id')).first()
+
+    if not alert:
+        abort(404)
+
+    if not data.get('result'):
+        abort(422)
+
+    alert.result = data.get('result')
+    alert.comment = data.get('comment')
+    alert.done_on = datetime.now()
+    db.session.commit()
+
+    message = f"<strong>Результат запроса в КЦ:</strong> {alert.result}"
+    if alert.comment:
+        message += f"<br><br><strong>Комментарий:</strong> {alert.comment}"
+
+    medsenger_api.send_message(is_urgent=True, need_answer=True, contract_id=alert.contract_id, only_doctor=True,
+                               text=message)
+
+    return jsonify({
+        "state": "done"
+    })
 
 
 with app.app_context():

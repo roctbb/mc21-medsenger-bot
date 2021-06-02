@@ -1,4 +1,4 @@
-from ctrack_bot import app
+from mc21_bot import app
 from config import *
 
 if __name__ == "__main__":

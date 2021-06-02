@@ -30,7 +30,7 @@ def order(data):
     contract_id = int(data.get('contract_id'))
     info = medsenger_api.get_patient_info(contract_id)
 
-    if info or not info.get('phone') or not data.get('params', {}).get('message'):
+    if info and info.get('phone') and data.get('params', {}).get('message'):
         alert = Alert(contract_id=contract_id, name=info.get('name'), birthday=info.get('birthday'),
                              phone=info.get('phone'), message=data.get('params').get('message'))
         db.session.add(alert)

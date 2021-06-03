@@ -5,6 +5,7 @@ db = SQLAlchemy()
 class Alert(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     contract_id = db.Column(db.Integer)
+    age = db.Column(db.Integer)
     name = db.Column(db.String(255))
     birthday = db.Column(db.String(255))
     phone = db.Column(db.String(255))
@@ -24,6 +25,7 @@ class Alert(db.Model):
             "id": self.id,
             "contract_id": self.contract_id,
             "name": self.name,
+            "age": self.age,
             "birthday": self.birthday,
             "phone": self.phone,
             "created_on": self.created_on,

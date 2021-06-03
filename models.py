@@ -28,7 +28,7 @@ class Alert(db.Model):
             "age": self.age,
             "birthday": self.birthday,
             "phone": self.phone,
-            "created_on": self.created_on,
+            "created_on": self.created_on.strftime("%Y-%m-%d %H:%M:%S"),
             "message": self.message
         }
 

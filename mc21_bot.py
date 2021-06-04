@@ -49,7 +49,7 @@ def init(data):
         db.session.add(Contract(id=data.get('contract_id')))
         db.session.commit()
 
-        medsenger_api.send_message(contract_id=data.get('contract_id'), only_doctor=True, action_link='settings', action_name='Комментарий для КЦ', text="Пожалуйста, оставьте комментарий для КЦ на случай экстренной ситуации. Укажите диагноз, принимаемые препараты и прочую информацию, которая может понадобится дежурному врачу.")
+        medsenger_api.send_message(contract_id=data.get('contract_id'), only_doctor=True, action_link='settings', action_name='Комментарий для КЦ', text="Пожалуйста, оставьте комментарий для КЦ на случай экстренной ситуации. Укажите диагноз, принимаемые препараты и прочую информацию, которая может понадобиться дежурному врачу.")
     return "ok"
 
 

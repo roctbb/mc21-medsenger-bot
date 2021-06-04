@@ -2,6 +2,10 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+class Contract(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    doctor_comments = db.Column(db.Text)
+
 class Alert(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     contract_id = db.Column(db.Integer)
@@ -9,6 +13,7 @@ class Alert(db.Model):
     name = db.Column(db.String(255))
     birthday = db.Column(db.String(255))
     phone = db.Column(db.String(255))
+    scenario = db.Column(db.String(255))
     message = db.Column(db.Text)
 
     created_on = db.Column(db.DateTime, server_default=db.func.now())

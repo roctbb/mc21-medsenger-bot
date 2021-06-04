@@ -17,7 +17,7 @@ def status(data):
     answer = {
         "is_tracking_data": False,
         "supported_scenarios": [],
-        "tracked_contracts": []
+        "tracked_contracts": [contract.id for contract in Contract.query.all()]
     }
 
     return jsonify(answer)
@@ -26,13 +26,12 @@ def status(data):
 @app.route('/order', methods=['POST'])
 @verify_json
 def order(data):
-    print(data)
     contract_id = int(data.get('contract_id'))
     info = medsenger_api.get_patient_info(contract_id)
 
     if info and info.get('phone') and data.get('params', {}).get('message'):
         alert = Alert(contract_id=contract_id, name=info.get('name'), birthday=info.get('birthday'),
-                             phone=info.get('phone'), message=data.get('params').get('message'), age=info.get('age'))
+                             phone=info.get('phone'), message=data.get('params').get('message'), age=info.get('age'), scenario=info.get('scenario', {}).get('name'))
         db.session.add(alert)
         db.session.commit()
 
@@ -46,6 +45,11 @@ def order(data):
 @app.route('/init', methods=['POST'])
 @verify_json
 def init(data):
+    if not Contract.query.filter_by(id=data.get('contract_id')):
+        db.session.add(Contract(id=data.get('contract_id')))
+        db.session.commit()
+
+        medsenger_api.send_message(contract_id=data.get('contract_id'), only_doctor=True, action_link='settings', action_name='Комментарий для КЦ', text="Пожалуйста, укажите комментарий для КЦ на случай экстренной ситуации. Укажите диагноз, принимаемые препараты и прочую информацию, которая может понадобится дежурному врачу.")
     return "ok"
 
 
@@ -53,6 +57,7 @@ def init(data):
 @app.route('/remove', methods=['POST'])
 @verify_json
 def remove(data):
+    Contract.query.filter_by(id=data.get('contract_id')).delete()
     return "ok"
 
 
@@ -61,14 +66,22 @@ def remove(data):
 @app.route('/settings', methods=['GET'])
 @verify_args
 def get_settings(args, form):
-    return "Этот интеллектуальный агент не требует настройки"
+    return render_template('settings.html', contract=Contract.query.filter_by(id=args.get('contract_id')).first())
+
+@app.route('/settings', methods=['POST'])
+@verify_args
+def get_settings(args, form):
+    contract = Contract.query.filter_by(id=args.get('contract_id')).first()
+    if contract:
+        contract.doctor_comments = form.get('doctor_comments')
+        db.session.commit()
+    return "<strong>Спасибо, окно можно закрыть</strong><script>window.parent.postMessage('close-modal-success','*');</script>"
 
 
 @app.route('/api/alert', methods=['GET'])
 @safe
 def get_alert():
     key = request.args.get('key')
-
     workstation = Workstation.query.filter_by(access_key=key).first()
 
     if not workstation:

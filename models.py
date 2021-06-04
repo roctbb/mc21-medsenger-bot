@@ -1,14 +1,17 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import backref
 
 db = SQLAlchemy()
 
 class Contract(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    doctor_comments = db.Column(db.Text)
+    doctor_comment = db.Column(db.Text)
+
+    alerts = db.relationship('Alert', backref=backref('contract', uselist=False), lazy=True)
 
 class Alert(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    contract_id = db.Column(db.Integer)
+    contract_id = db.Column(db.Integer, db.ForeignKey('contract.id', ondelete="CASCADE"))
     age = db.Column(db.Integer)
     name = db.Column(db.String(255))
     birthday = db.Column(db.String(255))
@@ -34,7 +37,9 @@ class Alert(db.Model):
             "birthday": self.birthday,
             "phone": self.phone,
             "created_on": self.created_on.strftime("%Y-%m-%d %H:%M:%S"),
-            "message": self.message
+            "message": self.message,
+            "comment": self.contract.doctor_comment,
+            "scenario": self.scenario
         }
 
 class Workstation(db.Model):

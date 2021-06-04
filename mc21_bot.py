@@ -15,7 +15,7 @@ def index():
 @verify_json
 def status(data):
     answer = {
-        "is_tracking_data": False,
+        "is_tracking_data": True,
         "supported_scenarios": [],
         "tracked_contracts": [contract.id for contract in Contract.query.all()]
     }
@@ -70,10 +70,10 @@ def get_settings(args, form):
 
 @app.route('/settings', methods=['POST'])
 @verify_args
-def get_settings(args, form):
+def set_settings(args, form):
     contract = Contract.query.filter_by(id=args.get('contract_id')).first()
     if contract:
-        contract.doctor_comments = form.get('doctor_comments')
+        contract.doctor_comment = form.get('doctor_comment')
         db.session.commit()
     return "<strong>Спасибо, окно можно закрыть</strong><script>window.parent.postMessage('close-modal-success','*');</script>"
 

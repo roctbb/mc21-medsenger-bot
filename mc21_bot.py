@@ -45,11 +45,11 @@ def order(data):
 @app.route('/init', methods=['POST'])
 @verify_json
 def init(data):
-    if not Contract.query.filter_by(id=data.get('contract_id')):
+    if not Contract.query.filter_by(id=data.get('contract_id')).count():
         db.session.add(Contract(id=data.get('contract_id')))
         db.session.commit()
 
-        medsenger_api.send_message(contract_id=data.get('contract_id'), only_doctor=True, action_link='settings', action_name='Комментарий для КЦ', text="Пожалуйста, укажите комментарий для КЦ на случай экстренной ситуации. Укажите диагноз, принимаемые препараты и прочую информацию, которая может понадобится дежурному врачу.")
+        medsenger_api.send_message(contract_id=data.get('contract_id'), only_doctor=True, action_link='settings', action_name='Комментарий для КЦ', text="Пожалуйста, оставьте комментарий для КЦ на случай экстренной ситуации. Укажите диагноз, принимаемые препараты и прочую информацию, которая может понадобится дежурному врачу.")
     return "ok"
 
 
@@ -57,7 +57,10 @@ def init(data):
 @app.route('/remove', methods=['POST'])
 @verify_json
 def remove(data):
-    Contract.query.filter_by(id=data.get('contract_id')).delete()
+    c = Contract.query.filter_by(id=data.get('contract_id')).first()
+    if c:
+        db.session.delete(c)
+        db.session.commit()
     return "ok"
 
 
@@ -100,6 +103,13 @@ def get_alert():
     return jsonify({
         "state": "alert",
         "count": len(alerts),
+        "answer_options": [
+
+            "Отправлена скорая помощь",
+            "Пациент ввел ошибочные данные",
+            "Не удалось дозвониться",
+            "Другое",
+        ],
         "alert": alert.as_dict()
     })
 

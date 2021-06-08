@@ -96,6 +96,7 @@ def get_alert():
         abort(403)
 
     alerts = Alert.query.filter_by(sent_on=None).all()
+    alerts = list(filter(lambda a: a.contract_id is not None, alerts))
     if not alerts:
         return jsonify({"state": "no alerts"})
 

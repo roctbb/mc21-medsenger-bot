@@ -119,6 +119,20 @@ def get_alert():
         "alert": alert.as_dict()
     })
 
+@app.route('/api/check', methods=['GET'])
+@safe
+def check_auth():
+    key = request.args.get('key')
+    workstation = Workstation.query.filter_by(access_key=key).first()
+    if not workstation:
+        return jsonify({
+            "state": "fail"
+        })
+
+    return jsonify({
+        "state": "ok"
+    })
+
 @app.route('/api/reset', methods=['POST'])
 @safe
 def reset_alert():

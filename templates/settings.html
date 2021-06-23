@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Список лекарств{% endblock %}
+
+{% block content  %}
+<div class="container" style="margin-top: 15px;">
+    <h6>Сообщение для КЦ на случай экстренной ситуации:</h6>
+       <form class="form" method="post">
+           <div class="form-group">
+               <textarea class="form-control" name="doctor_comment">{% if contract.doctor_comment %}{{ contract.doctor_comment }}{% endif %}</textarea>
+           </div>
+
+           <button class="btn btn-success">Сохранить</button>
+       </form>
+
+
+</div>
+{% endblock %}

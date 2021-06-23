@@ -15,9 +15,9 @@ def index():
 @verify_json
 def status(data):
     answer = {
-        "is_tracking_data": False,
+        "is_tracking_data": True,
         "supported_scenarios": [],
-        "tracked_contracts": []
+        "tracked_contracts": [contract.id for contract in Contract.query.all()]
     }
 
     return jsonify(answer)
@@ -26,13 +26,17 @@ def status(data):
 @app.route('/order', methods=['POST'])
 @verify_json
 def order(data):
-    print(data)
     contract_id = int(data.get('contract_id'))
     info = medsenger_api.get_patient_info(contract_id)
 
-    if info and data.get('params', {}).get('message'):
+    if info and info.get('phone') and data.get('params', {}).get('message'):
+        scenario = None
+
+        if info.get('scenario'):
+            scenario = info.get('scenario').get('name')
+
         alert = Alert(contract_id=contract_id, name=info.get('name'), birthday=info.get('birthday'),
-                             phone=info.get('phone', 'не указан'), message=data.get('params').get('message'), age=info.get('age'))
+                             phone=info.get('phone'), message=data.get('params').get('message'), age=info.get('age'), scenario=scenario)
         db.session.add(alert)
         db.session.commit()
 
@@ -46,6 +50,11 @@ def order(data):
 @app.route('/init', methods=['POST'])
 @verify_json
 def init(data):
+    if not Contract.query.filter_by(id=data.get('contract_id')).count():
+        db.session.add(Contract(id=data.get('contract_id')))
+        db.session.commit()
+
+        medsenger_api.send_message(contract_id=data.get('contract_id'), only_doctor=True, action_link='settings', action_name='Комментарий для КЦ', text="Пожалуйста, оставьте комментарий для КЦ на случай экстренной ситуации. Укажите диагноз, принимаемые препараты и прочую информацию, которая может понадобиться дежурному врачу.")
     return "ok"
 
 
@@ -53,6 +62,10 @@ def init(data):
 @app.route('/remove', methods=['POST'])
 @verify_json
 def remove(data):
+    c = Contract.query.filter_by(id=data.get('contract_id')).first()
+    if c:
+        db.session.delete(c)
+        db.session.commit()
     return "ok"
 
 
@@ -61,20 +74,29 @@ def remove(data):
 @app.route('/settings', methods=['GET'])
 @verify_args
 def get_settings(args, form):
-    return "Этот интеллектуальный агент не требует настройки"
+    return render_template('settings.html', contract=Contract.query.filter_by(id=args.get('contract_id')).first())
+
+@app.route('/settings', methods=['POST'])
+@verify_args
+def set_settings(args, form):
+    contract = Contract.query.filter_by(id=args.get('contract_id')).first()
+    if contract:
+        contract.doctor_comment = form.get('doctor_comment')
+        db.session.commit()
+    return "<strong>Спасибо, окно можно закрыть</strong><script>window.parent.postMessage('close-modal-success','*');</script>"
 
 
 @app.route('/api/alert', methods=['GET'])
 @safe
 def get_alert():
     key = request.args.get('key')
-
     workstation = Workstation.query.filter_by(access_key=key).first()
 
     if not workstation:
         abort(403)
 
     alerts = Alert.query.filter_by(sent_on=None).all()
+    alerts = list(filter(lambda a: a.contract_id is not None, alerts))
     if not alerts:
         return jsonify({"state": "no alerts"})
 
@@ -87,7 +109,28 @@ def get_alert():
     return jsonify({
         "state": "alert",
         "count": len(alerts),
+        "answer_options": [
+
+            "Отправлена скорая помощь",
+            "Пациент ввел ошибочные данные",
+            "Не удалось дозвониться",
+            "Другое",
+        ],
         "alert": alert.as_dict()
+    })
+
+@app.route('/api/check', methods=['GET'])
+@safe
+def check_auth():
+    key = request.args.get('key')
+    workstation = Workstation.query.filter_by(access_key=key).first()
+    if not workstation:
+        return jsonify({
+            "state": "fail"
+        })
+
+    return jsonify({
+        "state": "ok"
     })
 
 @app.route('/api/reset', methods=['POST'])

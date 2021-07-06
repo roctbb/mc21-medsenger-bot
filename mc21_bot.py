@@ -29,14 +29,14 @@ def order(data):
     contract_id = int(data.get('contract_id'))
     info = medsenger_api.get_patient_info(contract_id)
 
-    if info and info.get('phone') and data.get('params', {}).get('message'):
+    if info and data.get('params', {}).get('message'):
         scenario = None
 
         if info.get('scenario'):
             scenario = info.get('scenario').get('name')
 
         alert = Alert(contract_id=contract_id, name=info.get('name'), birthday=info.get('birthday'),
-                             phone=info.get('phone'), message=data.get('params').get('message'), age=info.get('age'), scenario=scenario)
+                             phone=info.get('phone', 'не указан'), message=data.get('params').get('message'), age=info.get('age'), scenario=scenario)
         db.session.add(alert)
         db.session.commit()
 

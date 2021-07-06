@@ -85,6 +85,22 @@ def set_settings(args, form):
         db.session.commit()
     return "<strong>Спасибо, окно можно закрыть</strong><script>window.parent.postMessage('close-modal-success','*');</script>"
 
+@app.route('/api/count', methods=['GET'])
+@safe
+def get_count():
+    key = request.args.get('key')
+    workstation = Workstation.query.filter_by(access_key=key).first()
+
+    if not workstation:
+        abort(403)
+
+    alerts = Alert.query.filter_by(sent_on=None).all()
+    alerts = list(filter(lambda a: a.contract_id is not None, alerts))
+
+
+    return jsonify({
+        "count": len(alerts)
+    })
 
 @app.route('/api/alert', methods=['GET'])
 @safe

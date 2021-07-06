@@ -25,6 +25,8 @@ class Alert(db.Model):
 
     result = db.Column(db.String(255))
     comment = db.Column(db.Text)
+    address = db.Column(db.Text, nullable=True)
+    card = db.Column(db.String(255), nullable=True)
 
     workstation_id = db.Column(db.Integer, db.ForeignKey('workstation.id', ondelete="CASCADE"), nullable=True)
 
@@ -39,6 +41,8 @@ class Alert(db.Model):
             "created_on": self.created_on.strftime("%Y-%m-%d %H:%M:%S"),
             "message": self.message,
             "comment": self.contract.doctor_comment,
+            "address": self.contract.address,
+            "card": self.contract.card,
             "scenario": self.scenario
         }
 

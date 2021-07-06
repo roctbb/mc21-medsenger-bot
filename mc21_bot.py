@@ -82,7 +82,10 @@ def set_settings(args, form):
     contract = Contract.query.filter_by(id=args.get('contract_id')).first()
     if contract:
         contract.doctor_comment = form.get('doctor_comment')
+        contract.address = form.get('address')
+        contract.card = form.get('card')
         db.session.commit()
+
     return "<strong>Спасибо, окно можно закрыть</strong><script>window.parent.postMessage('close-modal-success','*');</script>"
 
 @app.route('/api/count', methods=['GET'])
@@ -126,8 +129,9 @@ def get_alert():
         "state": "alert",
         "count": len(alerts),
         "answer_options": [
-
             "Отправлена скорая помощь",
+            "Нет возможности вызова СМП, предложен вызов 03",
+            "Пациент отказался от вызова скорой помощи",
             "Пациент ввел ошибочные данные",
             "Не удалось дозвониться",
             "Другое",

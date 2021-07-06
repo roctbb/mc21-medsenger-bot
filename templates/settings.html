@@ -3,10 +3,23 @@
 
 {% block content  %}
 <div class="container" style="margin-top: 15px;">
-    <h6>Сообщение для КЦ на случай экстренной ситуации:</h6>
+    
        <form class="form" method="post">
+           <h6>Сообщение для КЦ на случай экстренной ситуации:</h6>
            <div class="form-group">
                <textarea class="form-control" name="doctor_comment">{% if contract.doctor_comment %}{{ contract.doctor_comment }}{% endif %}</textarea>
+           </div>
+           
+           <h6>Адрес проживания:</h6>
+           
+           <div class="form-group">
+               <textarea class="form-control" name="address">{% if contract.address %}{{ contract.address }}{% endif %}</textarea>
+           </div>
+           
+           <h6>Номер карты:</h6>
+           
+           <div class="form-group">
+               <input type="text" class="form-control" name="card" value="{% if contract.card %}{{ contract.card }}{% endif %}" />
            </div>
 
            <button class="btn btn-success">Сохранить</button>

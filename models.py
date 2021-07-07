@@ -6,6 +6,8 @@ db = SQLAlchemy()
 class Contract(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     doctor_comment = db.Column(db.Text)
+    address = db.Column(db.Text, nullable=True)
+    card = db.Column(db.String(255), nullable=True)
 
     alerts = db.relationship('Alert', backref=backref('contract', uselist=False), lazy=True)
 
@@ -25,8 +27,7 @@ class Alert(db.Model):
 
     result = db.Column(db.String(255))
     comment = db.Column(db.Text)
-    address = db.Column(db.Text, nullable=True)
-    card = db.Column(db.String(255), nullable=True)
+
 
     workstation_id = db.Column(db.Integer, db.ForeignKey('workstation.id', ondelete="CASCADE"), nullable=True)
 

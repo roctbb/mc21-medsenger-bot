@@ -185,7 +185,7 @@ def reset_alert():
 
 @app.route('/api/info', methods=['POST'])
 @safe
-def reset_alert():
+def info():
     key = request.args.get('key')
     workstation = Workstation.query.filter_by(access_key=key).first()
     if not workstation:

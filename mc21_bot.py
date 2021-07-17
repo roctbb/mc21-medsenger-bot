@@ -6,6 +6,7 @@ from models import *
 
 medsenger_api = AgentApiClient(API_KEY, MAIN_HOST, AGENT_ID, API_DEBUG)
 
+
 @app.route('/')
 def index():
     return "Waiting for the thunder"
@@ -36,15 +37,18 @@ def order(data):
             scenario = info.get('scenario').get('name')
 
         alert = Alert(contract_id=contract_id, name=info.get('name'), birthday=info.get('birthday'),
-                             phone=info.get('phone', 'не указан'), message=data.get('params').get('message'), age=info.get('age'), scenario=scenario)
+                      phone=info.get('phone', 'не указан'), message=data.get('params').get('message'),
+                      age=info.get('age'), scenario=scenario)
         db.session.add(alert)
         db.session.commit()
 
-        medsenger_api.send_message(is_urgent=True, contract_id=contract_id, only_patient=True, text="В течение нескольких минут с Вами свяжется врач контакт-центра МЦ 21 век по телефону {}.".format(info.get('phone')))
-        medsenger_api.send_message(is_urgent=True, need_answer=True, contract_id=contract_id, only_doctor=True, text="Отправлен запрос в контакт центр для экстренной связи с пациентом. Уточните состояние пациента.")
+        medsenger_api.send_message(is_urgent=True, contract_id=contract_id, only_patient=True,
+                                   text="В течение нескольких минут с Вами свяжется врач контакт-центра МЦ 21 век по телефону {}.".format(
+                                       info.get('phone')))
+        medsenger_api.send_message(is_urgent=True, need_answer=True, contract_id=contract_id, only_doctor=True,
+                                   text="Отправлен запрос в контакт центр для экстренной связи с пациентом. Уточните состояние пациента.")
     else:
         abort(422)
-
 
 
 @app.route('/init', methods=['POST'])
@@ -54,9 +58,10 @@ def init(data):
         db.session.add(Contract(id=data.get('contract_id')))
         db.session.commit()
 
-        medsenger_api.send_message(contract_id=data.get('contract_id'), only_doctor=True, action_link='settings', action_name='Комментарий для КЦ', text="Пожалуйста, оставьте комментарий для КЦ на случай экстренной ситуации. Укажите диагноз, принимаемые препараты и прочую информацию, которая может понадобиться дежурному врачу.")
+        medsenger_api.send_message(contract_id=data.get('contract_id'), only_doctor=True, action_link='settings',
+                                   action_name='Комментарий для КЦ',
+                                   text="Пожалуйста, оставьте комментарий для КЦ на случай экстренной ситуации. Укажите диагноз, принимаемые препараты и прочую информацию, которая может понадобиться дежурному врачу.")
     return "ok"
-
 
 
 @app.route('/remove', methods=['POST'])
@@ -69,12 +74,12 @@ def remove(data):
     return "ok"
 
 
-
 # settings and views
 @app.route('/settings', methods=['GET'])
 @verify_args
 def get_settings(args, form):
     return render_template('settings.html', contract=Contract.query.filter_by(id=args.get('contract_id')).first())
+
 
 @app.route('/settings', methods=['POST'])
 @verify_args
@@ -88,6 +93,7 @@ def set_settings(args, form):
 
     return "<strong>Спасибо, окно можно закрыть</strong><script>window.parent.postMessage('close-modal-success','*');</script>"
 
+
 @app.route('/api/count', methods=['GET'])
 @safe
 def get_count():
@@ -100,10 +106,10 @@ def get_count():
     alerts = Alert.query.filter_by(sent_on=None).all()
     alerts = list(filter(lambda a: a.contract_id is not None, alerts))
 
-
     return jsonify({
         "count": len(alerts)
     })
+
 
 @app.route('/api/alert', methods=['GET'])
 @safe
@@ -139,6 +145,7 @@ def get_alert():
         "alert": alert.as_dict()
     })
 
+
 @app.route('/api/check', methods=['GET'])
 @safe
 def check_auth():
@@ -152,6 +159,7 @@ def check_auth():
     return jsonify({
         "state": "ok"
     })
+
 
 @app.route('/api/reset', methods=['POST'])
 @safe
@@ -173,6 +181,30 @@ def reset_alert():
     return jsonify({
         "state": "done"
     })
+
+
+@app.route('/api/info', methods=['POST'])
+@safe
+def reset_alert():
+    key = request.args.get('key')
+    workstation = Workstation.query.filter_by(access_key=key).first()
+    if not workstation:
+        abort(403)
+
+    data = request.json
+
+    contract = Contract.query.filter_by(card=data.get('card')).first()
+    if not contract:
+        abort(404)
+
+    if not data.get('message'):
+        abort(422)
+    medsenger_api.send_message(contract_id=contract.id, only_doctor=True,
+                               text="Сообщение от СМП: {}".format(data.get('message')))
+    return jsonify({
+        "state": "done"
+    })
+
 
 @app.route('/api/alert', methods=['POST'])
 @safe

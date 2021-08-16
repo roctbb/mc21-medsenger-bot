@@ -41,6 +41,7 @@ class Alert(db.Model):
             "birthday": self.birthday,
             "phone": self.phone,
             "created_on": self.created_on.strftime("%Y-%m-%d %H:%M:%S"),
+            "answered_on": self.done_on.strftime("%Y-%m-%d %H:%M:%S"),
             "sent_answer": self.result,
             "sent_comment": self.comment,
             "message": self.message,

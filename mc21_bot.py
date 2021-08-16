@@ -111,7 +111,7 @@ def get_count():
     })
 
 
-@app.route('/api/alerts', methods=['GET'])
+@app.route('/api/unclosed_alerts', methods=['GET'])
 @safe
 def get_unclosed_alerts():
     key = request.args.get('key')

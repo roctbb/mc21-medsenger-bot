@@ -113,7 +113,7 @@ def get_count():
 
 @app.route('/api/alerts', methods=['GET'])
 @safe
-def get_alert():
+def get_unclosed_alerts():
     key = request.args.get('key')
     workstation = Workstation.query.filter_by(access_key=key).first()
 
@@ -209,7 +209,7 @@ def reset_alert():
 
 @app.route('/api/comment', methods=['POST'])
 @safe
-def info():
+def comment():
     key = request.args.get('key')
     workstation = Workstation.query.filter_by(access_key=key).first()
     if not workstation:
@@ -244,7 +244,7 @@ def info():
 
 @app.route('/api/close', methods=['POST'])
 @safe
-def info():
+def close():
     key = request.args.get('key')
     workstation = Workstation.query.filter_by(access_key=key).first()
     if not workstation:

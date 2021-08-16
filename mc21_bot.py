@@ -111,6 +111,30 @@ def get_count():
     })
 
 
+@app.route('/api/alerts', methods=['GET'])
+@safe
+def get_alert():
+    key = request.args.get('key')
+    workstation = Workstation.query.filter_by(access_key=key).first()
+
+    if not workstation:
+        abort(403)
+
+    alerts = Alert.query.filter_by(closed_on=None).all()
+    alerts = list(filter(lambda a: a.contract_id is not None, alerts))
+
+    if not alerts:
+        return jsonify({"state": "no alerts", "alerts": []})
+
+    return jsonify({
+        "state": "alerts",
+        "count": len(alerts),
+        "alerts": [
+            alert.as_dict() for alert in alerts
+        ]
+    })
+
+
 @app.route('/api/alert', methods=['GET'])
 @safe
 def get_alert():
@@ -183,7 +207,7 @@ def reset_alert():
     })
 
 
-@app.route('/api/info', methods=['POST'])
+@app.route('/api/comment', methods=['POST'])
 @safe
 def info():
     key = request.args.get('key')
@@ -193,17 +217,55 @@ def info():
 
     data = request.json
 
-    contract = Contract.query.filter_by(card=data.get('card')).first()
+    contract = None
+    if data.get('card'):
+        contract = Contract.query.filter_by(card=data.get('card')).first()
+
+    elif data.get('contract_id'):
+        contract = Contract.query.filter_by(id=data.get('contract_id')).first()
+
+    elif data.get('id'):
+        alert = Alert.query.filter_by(id=data.get('alert_id')).first()
+        if not alert:
+            abort(404)
+        contract = alert.contract
+
     if not contract:
         abort(404)
-
     if not data.get('message'):
         abort(422)
+
     medsenger_api.send_message(contract_id=contract.id, only_doctor=True,
                                text="Сообщение от СМП: {}".format(data.get('message')))
     return jsonify({
         "state": "done"
     })
+
+
+@app.route('/api/close', methods=['POST'])
+@safe
+def info():
+    key = request.args.get('key')
+    workstation = Workstation.query.filter_by(access_key=key).first()
+    if not workstation:
+        abort(403)
+
+    data = request.json
+
+    if data.get('id'):
+        alert = Alert.query.filter_by(id=data.get('alert_id')).first()
+        if not alert:
+            abort(404)
+
+        alert.closed_on = datetime.now()
+        db.session.commit()
+
+        return jsonify({
+            "state": "done"
+        })
+
+    else:
+        abort(404)
 
 
 @app.route('/api/alert', methods=['POST'])

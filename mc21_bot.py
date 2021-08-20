@@ -225,7 +225,7 @@ def comment():
         contract = Contract.query.filter_by(id=data.get('contract_id')).first()
 
     elif data.get('id'):
-        alert = Alert.query.filter_by(id=data.get('alert_id')).first()
+        alert = Alert.query.filter_by(id=data.get('id')).first()
         if not alert:
             abort(404)
         contract = alert.contract

@@ -215,6 +215,9 @@ def comment():
     if not workstation:
         abort(403)
 
+    print(request.headers, request.data)
+
+
     data = request.json
 
     contract = None

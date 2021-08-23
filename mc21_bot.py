@@ -293,6 +293,10 @@ def process_alert():
     alert.result = data.get('result')
     alert.comment = data.get('comment')
     alert.done_on = datetime.now()
+
+    if alert.result != "Отправлена скорая помощь":
+        alert.closed_on = datetime.now()
+
     db.session.commit()
 
     message = f"<strong>Результат запроса в КЦ:</strong> {alert.result}"

@@ -260,8 +260,9 @@ def close():
         if not alert:
             abort(404)
 
-        alert.closed_on = datetime.now()
-        db.session.commit()
+        if not alert.closed_on:
+            alert.closed_on = datetime.now()
+            db.session.commit()
 
         return jsonify({
             "state": "done"

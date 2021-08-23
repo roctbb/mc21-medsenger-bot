@@ -121,7 +121,7 @@ def get_unclosed_alerts():
         abort(403)
 
     alerts = Alert.query.filter_by(closed_on=None).all()
-    alerts = list(filter(lambda a: a.contract_id is not None, alerts))
+    alerts = list(filter(lambda a: a.contract_id is not None and a.done_on is not None, alerts))
 
     if not alerts:
         return jsonify({"state": "no alerts", "alerts": []})

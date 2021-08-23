@@ -256,7 +256,7 @@ def close():
     data = request.json
 
     if data.get('id'):
-        alert = Alert.query.filter_by(id=data.get('alert_id')).first()
+        alert = Alert.query.filter_by(id=data.get('id')).first()
         if not alert:
             abort(404)
 

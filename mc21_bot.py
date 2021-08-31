@@ -68,13 +68,19 @@ def init(data):
         "emergency_info": "doctor_comments"
     }
 
+    additional_param_names = {
+        "address": "Адрес проживания",
+        "card_number": "Номер карты",
+        "emergency_info": "Информация на случай экстренной ситуации"
+    }
+
     for search_param in ['address', 'card_number', 'emergency_info']:
         param_name = param_names[search_param]
 
         if params.get(search_param):
             setattr(contract, param_name, params.get(search_param))
         elif info.get('additional_params', {}).get(search_param):
-            setattr(contract, param_name, info.get('additional_params', {}).get(search_param))
+            setattr(contract, param_name, info.get('additional_params', {}).get(additional_param_names[search_param]))
 
     medsenger_api.send_message(contract_id=data.get('contract_id'), only_doctor=True, action_link='settings',
                                action_name='Комментарий для КЦ',

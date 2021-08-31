@@ -54,13 +54,33 @@ def order(data):
 @app.route('/init', methods=['POST'])
 @verify_json
 def init(data):
-    if not Contract.query.filter_by(id=data.get('contract_id')).count():
-        db.session.add(Contract(id=data.get('contract_id')))
-        db.session.commit()
+    contract = Contract.query.filter_by(id=data.get('contract_id')).first()
+    if not contract:
+        contract = Contract(id=data.get('contract_id'))
+        db.session.add(contract)
 
-        medsenger_api.send_message(contract_id=data.get('contract_id'), only_doctor=True, action_link='settings',
-                                   action_name='Комментарий для КЦ',
-                                   text="Пожалуйста, оставьте комментарий для КЦ на случай экстренной ситуации. Укажите диагноз, принимаемые препараты и прочую информацию, которая может понадобиться дежурному врачу.")
+    info = medsenger_api.get_patient_info(contract.id)
+    params = data.get('params', {})
+
+    param_names = {
+        "address": "address",
+        "card_number": "card",
+        "emergency_info": "doctor_comments"
+    }
+
+    for search_param in ['address', 'card_number', 'emergency_info']:
+        param_name = param_names[search_param]
+
+        if params.get(search_param):
+            setattr(contract, param_name, params.get(search_param))
+        elif info.get('additional_params', {}).get(search_param):
+            setattr(contract, param_name, info.get('additional_params', {}).get(search_param))
+
+    medsenger_api.send_message(contract_id=data.get('contract_id'), only_doctor=True, action_link='settings',
+                               action_name='Комментарий для КЦ',
+                               text="Пожалуйста, оставьте комментарий для КЦ на случай экстренной ситуации. Укажите диагноз, принимаемые препараты и прочую информацию, которая может понадобиться дежурному врачу.")
+
+    db.session.commit()
     return "ok"
 
 
@@ -216,7 +236,6 @@ def comment():
         abort(403)
 
     print(request.headers, request.data)
-
 
     data = request.json
 

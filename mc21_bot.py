@@ -28,9 +28,16 @@ def status(data):
 @verify_json
 def order(data):
     contract_id = int(data.get('contract_id'))
+    contract = Contract.query.filter_by(id=data.get('contract_id')).first()
+    if not contract:
+        abort(422)
+
     info = medsenger_api.get_patient_info(contract_id)
 
-    if info and data.get('params', {}).get('message'):
+    if contract and info and data.get('params', {}).get('message'):
+        if not contract.clinic_id:
+            contract.clinic_id = info.get('clinic_id')
+
         scenario = None
 
         if info.get('scenario'):
@@ -43,10 +50,10 @@ def order(data):
         db.session.commit()
 
         medsenger_api.send_message(is_urgent=True, contract_id=contract_id, only_patient=True,
-                                   text="В течение нескольких минут с Вами свяжется врач контакт-центра МЦ 21 век по телефону {}.".format(
+                                   text="В течение нескольких минут с Вами свяжется врач контакт-центра вашего медицинского учреждения по телефону {}.".format(
                                        info.get('phone')))
         medsenger_api.send_message(is_urgent=True, need_answer=True, contract_id=contract_id, only_doctor=True,
-                                   text="Отправлен запрос в контакт центр для экстренной связи с пациентом. Уточните состояние пациента.")
+                                   text="Отправлен запрос в контакт-центр для экстренной связи с пациентом. Уточните состояние пациента.")
     else:
         abort(422)
 
@@ -55,11 +62,13 @@ def order(data):
 @verify_json
 def init(data):
     contract = Contract.query.filter_by(id=data.get('contract_id')).first()
+    info = medsenger_api.get_patient_info(contract.id)
+
     if not contract:
         contract = Contract(id=data.get('contract_id'))
         db.session.add(contract)
 
-    info = medsenger_api.get_patient_info(contract.id)
+    contract.clinic_id = info.get('clinic_id')
     params = data.get('params', {})
 
     param_names = {
@@ -132,7 +141,7 @@ def get_count():
         abort(403)
 
     alerts = Alert.query.filter_by(sent_on=None).all()
-    alerts = list(filter(lambda a: a.contract_id is not None, alerts))
+    alerts = list(filter(lambda a: a.contract_id is not None and a.clinic_id == workstation.clinic_id, alerts))
 
     return jsonify({
         "count": len(alerts)
@@ -149,7 +158,7 @@ def get_unclosed_alerts():
         abort(403)
 
     alerts = Alert.query.filter_by(closed_on=None).all()
-    alerts = list(filter(lambda a: a.contract_id is not None and a.done_on is not None, alerts))
+    alerts = list(filter(lambda a: a.contract_id is not None and a.done_on is not None and a.clinic_id == workstation.clinic_id, alerts))
 
     if not alerts:
         return jsonify({"state": "no alerts", "alerts": []})
@@ -173,7 +182,7 @@ def get_alert():
         abort(403)
 
     alerts = Alert.query.filter_by(sent_on=None).all()
-    alerts = list(filter(lambda a: a.contract_id is not None, alerts))
+    alerts = list(filter(lambda a: a.contract_id is not None and a.clinic_id == workstation.clinic_id, alerts))
     if not alerts:
         return jsonify({"state": "no alerts"})
 

@@ -6,6 +6,7 @@ db = SQLAlchemy()
 
 class Contract(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    clinic_id = db.Column(db.Integer, nullable=True)
     doctor_comment = db.Column(db.Text)
     address = db.Column(db.Text, nullable=True)
     card = db.Column(db.String(255), nullable=True)
@@ -62,5 +63,6 @@ class Alert(db.Model):
 
 class Workstation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    clinic_id = db.Column(db.Integer, nullable=True)
     access_key = db.Column(db.String(255))
     description = db.Column(db.String(255))

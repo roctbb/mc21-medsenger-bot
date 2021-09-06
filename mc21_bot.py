@@ -141,7 +141,7 @@ def get_count():
         abort(403)
 
     alerts = Alert.query.filter_by(sent_on=None).all()
-    alerts = list(filter(lambda a: a.contract_id is not None and a.clinic_id == workstation.clinic_id, alerts))
+    alerts = list(filter(lambda a: a.contract_id is not None and a.contract.clinic_id == workstation.clinic_id, alerts))
 
     return jsonify({
         "count": len(alerts)
@@ -158,7 +158,7 @@ def get_unclosed_alerts():
         abort(403)
 
     alerts = Alert.query.filter_by(closed_on=None).all()
-    alerts = list(filter(lambda a: a.contract_id is not None and a.done_on is not None and a.clinic_id == workstation.clinic_id, alerts))
+    alerts = list(filter(lambda a: a.contract_id is not None and a.done_on is not None and a.contract.clinic_id == workstation.clinic_id, alerts))
 
     if not alerts:
         return jsonify({"state": "no alerts", "alerts": []})
@@ -182,7 +182,7 @@ def get_alert():
         abort(403)
 
     alerts = Alert.query.filter_by(sent_on=None).all()
-    alerts = list(filter(lambda a: a.contract_id is not None and a.clinic_id == workstation.clinic_id, alerts))
+    alerts = list(filter(lambda a: a.contract_id is not None and a.contract.clinic_id == workstation.clinic_id, alerts))
     if not alerts:
         return jsonify({"state": "no alerts"})
 

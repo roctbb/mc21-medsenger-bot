@@ -62,11 +62,13 @@ def order(data):
 @verify_json
 def init(data):
     contract = Contract.query.filter_by(id=data.get('contract_id')).first()
-    info = medsenger_api.get_patient_info(contract.id)
+
 
     if not contract:
         contract = Contract(id=data.get('contract_id'))
         db.session.add(contract)
+
+    info = medsenger_api.get_patient_info(data.get('contract_id'))
 
     contract.clinic_id = info.get('clinic_id')
     params = data.get('params', {})

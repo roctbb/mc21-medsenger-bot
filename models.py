@@ -8,6 +8,7 @@ class Contract(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     clinic_id = db.Column(db.Integer, nullable=True)
     doctor_comment = db.Column(db.Text)
+    number = db.Column(db.String(255), nullable=True)
     address = db.Column(db.Text, nullable=True)
     card = db.Column(db.String(255), nullable=True)
     alerts = db.relationship('Alert', backref=backref('contract', uselist=False), lazy=True)
@@ -40,7 +41,7 @@ class Alert(db.Model):
             "name": self.name,
             "age": self.age,
             "birthday": self.birthday,
-            "phone": self.phone,
+            "phone": self.phone if self.phone else "",
             "created_on": self.created_on.strftime("%Y-%m-%d %H:%M:%S"),
             "answered_on": self.done_on.strftime("%Y-%m-%d %H:%M:%S") if self.done_on else None,
             "sent_answer": self.result,
@@ -48,6 +49,7 @@ class Alert(db.Model):
             "message": self.message,
             "comment": self.contract.doctor_comment,
             "address": self.contract.address,
+            "contract_number": self.contract.number if self.contract.number else "",
             "card": self.contract.card,
             "scenario": self.scenario,
             "comment_options": [

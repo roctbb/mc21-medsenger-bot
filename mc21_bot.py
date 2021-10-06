@@ -72,11 +72,12 @@ def init(data):
 
     contract.clinic_id = info.get('clinic_id')
     params = data.get('params', {})
+    contract.number = info.get('contract_number')
 
     param_names = {
         "address": "address",
         "card_number": "card",
-        "emergency_info": "doctor_comments"
+        "emergency_info": "doctor_comment"
     }
 
     additional_param_names = {
@@ -98,6 +99,9 @@ def init(data):
     medsenger_api.send_message(contract_id=data.get('contract_id'), only_doctor=True, action_link='settings',
                                action_name='Комментарий для КЦ',
                                text="Пожалуйста, оставьте комментарий для КЦ на случай экстренной ситуации. Укажите диагноз, принимаемые препараты и прочую информацию, которая может понадобиться дежурному врачу.")
+
+    if not contract.doctor_comment:
+        contract.doctor_comment = """Программа Medsenger по данным мониторинга предплагает вызвать Скорую Медицинскую Помощь. Необходимо связаться с пациентом."""
 
     db.session.commit()
     return "ok"

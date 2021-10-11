@@ -63,7 +63,6 @@ def order(data):
 def init(data):
     contract = Contract.query.filter_by(id=data.get('contract_id')).first()
 
-
     if not contract:
         contract = Contract(id=data.get('contract_id'))
         db.session.add(contract)
@@ -305,6 +304,9 @@ def close():
         if not alert.closed_on:
             alert.closed_on = datetime.now()
             db.session.commit()
+
+            medsenger_api.send_message(contract_id=alert.contract.id, only_doctor=True,
+                                       text="Сообщение от СМП: обращение закрыто.")
 
         return jsonify({
             "state": "done"

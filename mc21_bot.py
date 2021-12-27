@@ -41,10 +41,13 @@ def order(data):
         scenario = None
 
         if info.get('scenario'):
-            scenario = info.get('scenario').get('name')
+            try:
+                scenario = info.get('scenario', {}).get('name')
+            except:
+                pass
 
         alert = Alert(contract_id=contract_id, name=info.get('name'), birthday=info.get('birthday'),
-                      phone=info.get('phone', 'не указан'), message=data.get('params').get('message'),
+                      phone=info.get('phone', 'не указан'), message=data.get('params', {}).get('message'),
                       age=info.get('age'), scenario=scenario)
         db.session.add(alert)
         db.session.commit()
@@ -54,6 +57,8 @@ def order(data):
                                        info.get('phone')))
         medsenger_api.send_message(is_urgent=True, need_answer=True, contract_id=contract_id, only_doctor=True,
                                    text="Отправлен запрос в контакт-центр для экстренной связи с пациентом. Уточните состояние пациента.")
+
+        return "ok"
     else:
         abort(422)
 
